@@ -1,0 +1,26 @@
+trigger AccConDescrp on Account (after update) {
+    
+    Map<String, Account> mapAcc=new Map<String, Account>();
+    List<Contact> conList = new List<Contact>();
+    List<Contact> conUpdate = new List<Contact>();
+    if(trigger.isExecuting && trigger.isAfter && trigger.isUpdate)
+    {
+        for(Account acc:trigger.new){
+            if(acc.industry != trigger.oldmap.get(acc.Id).Industry){
+                mapAcc.put(acc.Id,acc);
+            }
+            if(mapAcc.size()>0){
+                conList=[SELECT Id, Description, Account.Id FROM Contact Where Account.Id=:mapAcc.keyset()];
+                system.debug('Contact list associated with Account Id :'+conList);
+            }
+            if(conList.size()>0){
+                for(Contact co:conList){
+                    co.Description = mapAcc.get(co.AccountId).Industry;
+                    conUpdate.add(co);
+                }
+            }
+        }
+    }
+    update conUpdate;
+    
+}
